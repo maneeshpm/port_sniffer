@@ -44,6 +44,10 @@ impl Config {
             };
             
             return Ok(Config{ipaddr, num_threads});
+        } 
+
+        if let Ok(ipaddr) = IpAddr::from_str(&args[1]) {
+            return Ok(Config{ipaddr, num_threads: 4});
         }
 
         return Err("Syntax error");
@@ -60,8 +64,20 @@ fn scan(port: u16, ipaddr: IpAddr) -> bool {
 
 // Run the program
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
+    let mut open_ports: Vec<u16> = vec![];
     for i in 0..MAX_PORT {
-        scan(i, config.ipaddr);
+        match scan(i, config.ipaddr) {
+            true => {
+                open_ports.push(i);
+                print!(".");
+            },
+            false => {}
+        }
+    }
+
+    open_ports.sort();
+    for i in open_ports {
+        println!("Found open port: {}", i);
     }
 
     Ok(())

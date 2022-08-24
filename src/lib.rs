@@ -1,8 +1,10 @@
-use std::net::IpAddr;
+use std::net::{IpAddr, TcpStream};
 use std::str::FromStr;
+use std::error::Error;
+
+const MAX_PORT: u16 = 65535;
 
 pub struct Config {
-    flag: String,
     ipaddr: IpAddr,
     num_threads: u16
 }
@@ -41,9 +43,26 @@ impl Config {
                 Err(_) => return Err("Cannot parse number of threads")
             };
             
-            return Ok(Config{flag, ipaddr, num_threads});
+            return Ok(Config{ipaddr, num_threads});
         }
 
         return Err("Syntax error");
     }
+}
+
+fn scan(port: u16, ipaddr: IpAddr) -> bool {
+    if let Ok(_) = TcpStream::connect((ipaddr, port)) {
+        return true;
+    }
+
+    return false;
+}
+
+// Run the program
+pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
+    for i in 0..MAX_PORT {
+        scan(i, config.ipaddr);
+    }
+
+    Ok(())
 }

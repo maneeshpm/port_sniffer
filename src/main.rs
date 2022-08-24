@@ -12,4 +12,9 @@ fn main() {
         }
         process::exit(0);
     });
+
+    if let Err(e) = port_sniffer::run(config) {
+        eprintln!("Application error: {}", e);
+        process::exit(1);
+    }
 }

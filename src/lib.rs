@@ -66,6 +66,7 @@ fn scan(port: u16, ipaddr: IpAddr) -> bool {
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let mut open_ports: Vec<u16> = vec![];
     for i in 0..MAX_PORT {
+        println!("Checking port, {}", i);
         match scan(i, config.ipaddr) {
             true => {
                 open_ports.push(i);

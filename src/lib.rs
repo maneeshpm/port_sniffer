@@ -1,8 +1,9 @@
 use std::net::{IpAddr, TcpStream};
 use std::str::FromStr;
 use std::error::Error;
+use std::io::{self, Write};
 
-const MAX_PORT: u16 = 65535;
+const MAX_PORT: u16 = 3000;
 
 pub struct Config {
     ipaddr: IpAddr,
@@ -66,16 +67,17 @@ fn scan(port: u16, ipaddr: IpAddr) -> bool {
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let mut open_ports: Vec<u16> = vec![];
     for i in 0..MAX_PORT {
-        println!("Checking port, {}", i);
         match scan(i, config.ipaddr) {
             true => {
                 open_ports.push(i);
                 print!(".");
+                io::stdout().flush().unwrap();
             },
             false => {}
         }
     }
 
+    println!("Scan complete!");
     open_ports.sort();
     for i in open_ports {
         println!("Found open port: {}", i);

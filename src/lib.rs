@@ -2,6 +2,8 @@ use std::net::{IpAddr, TcpStream};
 use std::str::FromStr;
 use std::error::Error;
 use std::io::{self, Write};
+use std::thread;
+use std::sync::mpsc;
 
 const MAX_PORT: u16 = 3000;
 
@@ -66,18 +68,32 @@ fn scan(port: u16, ipaddr: IpAddr) -> bool {
 // Run the program
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let mut open_ports: Vec<u16> = vec![];
-    for i in 0..MAX_PORT {
-        match scan(i, config.ipaddr) {
-            true => {
-                open_ports.push(i);
-                print!(".");
-                io::stdout().flush().unwrap();
-            },
-            false => {}
-        }
-    }
 
-    println!("Scan complete!");
+    let (tx, rx) = mpsc::channel::<u16>();
+
+    let per_thread = MAX_PORT/config.num_threads;
+    for i in 0..config.num_threads {
+        let tx_c = tx.clone();
+        thread::spawn(move || {
+            for port in i*per_thread..(i + 1)*per_thread {
+                if port > MAX_PORT {
+                    break;
+                }
+
+                if scan(port, config.ipaddr) {
+                    tx_c.send(port).unwrap();
+                    print!(".");
+                    io::stdout().flush().unwrap();
+                }
+            }
+        });
+    }
+    drop(tx);
+    
+    for port in rx {
+        open_ports.push(port);
+    }
+    
     open_ports.sort();
     for i in open_ports {
         println!("Found open port: {}", i);
